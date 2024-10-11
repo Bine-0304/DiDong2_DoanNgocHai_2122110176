@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import ResponsiveMenu from './ResponsiveMenu';
-import Banner from './Banner';
-import ProductList from './ProductList';
-import Header from './Header';
-import Categories from './Category';
-import FeaturedProducts from './featuredProduct';
-import NewProducts from './newProduct';
-import Footer from './Footer';
+import ResponsiveMenu from '../ResponsiveMenu';
+import Banner from '../Banner';
+import Header from '../Header';
+import Categories from '../Category';
+import FeaturedProducts from '../featuredProduct';
+import NewProducts from '../newProduct';
+import Footer from '../Footer';
 
 export default function Home() {
     return (

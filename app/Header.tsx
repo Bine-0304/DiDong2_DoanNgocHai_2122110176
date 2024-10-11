@@ -1,15 +1,25 @@
 import React from 'react';
 import { View, Image, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useFonts } from 'expo-font';
+import { DancingScript_400Regular, DancingScript_700Bold } from '@expo-google-fonts/dancing-script';
+import AppLoading from 'expo-app-loading';
 const Header: React.FC = () => {
+  let [fontsLoaded] = useFonts({
+    DancingScript_400Regular,
+    DancingScript_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
   return (
     <View style={styles.container}>
+      <Text style={styles.nameshop}>BijiHouse</Text>
       <View style={styles.topRow}>
         <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-        />
+          source={require('../assets/images/logo.png')}
+          style={styles.logo}/>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
@@ -27,7 +37,7 @@ const Header: React.FC = () => {
           </TouchableOpacity>
           <Text style={styles.separator}>|</Text>
           <TouchableOpacity>
-            <Text style={styles.authText}>ĐĂNG KÝ</Text>
+            <Text style={styles.authText}>Welcome to BijiHouse</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.iconContainer}>
@@ -50,6 +60,14 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
     padding: 10,
+  },
+  nameshop:{
+    textAlign: 'center', 
+    fontSize: 26, 
+    color: '#ff6347',
+    fontWeight: 'bold',
+    fontFamily: 'DancingScript_700Bold',
+    marginBottom: 5,
   },
   topRow: {
     flexDirection: 'row',
