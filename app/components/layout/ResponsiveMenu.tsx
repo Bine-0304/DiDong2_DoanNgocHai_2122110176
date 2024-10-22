@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProp, ParamListBase, useNavigation, useRoute } from '@react-navigation/native';
-import { MainTabParamList, RootStackParamList } from './(tabs)/index'; // Make sure this import path is correct
+import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import { MainTabParamList, RootStackParamList } from '@/app/(tabs)';
 
 type MenuItemProps = {
   icon: keyof typeof Ionicons.glyphMap;

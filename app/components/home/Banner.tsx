@@ -7,7 +7,7 @@ const Banner: React.FC = () => {
   return (
     <View style={styles.bannerContainer}>
       <Image
-        source={require('../assets/images/slider1.webp')}
+        source={require('../../../assets/images/slider1.webp')}
         style={[styles.bannerImage, { width }]}
         resizeMode="contain"/>
     </View>

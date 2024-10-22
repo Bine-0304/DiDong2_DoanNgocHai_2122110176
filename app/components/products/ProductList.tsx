@@ -1,36 +1,41 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import ResponsiveMenu from './ResponsiveMenu';
+import ResponsiveMenu from '../layout/ResponsiveMenu';
 
-const allProducts = [
-    { id: '1', title: 'Product 1', price: 299000, salePrice: 199000, image: require('../assets/images/pijima05.jpg') },
-    { id: '2', title: 'Product 2', price: 399000, salePrice: 290000, image: require('../assets/images/pijima06.jpg') },
-    { id: '3', title: 'Product 3', price: 499000, salePrice: null, image: require('../assets/images//pijima20.jpeg') },
-    { id: '4', title: 'Product 4', price: 299000, salePrice: 199000, image: require('../assets/images/pijima15.jpg') },
-    { id: '5', title: 'Product 5', price: 199000, salePrice: null, image: require('../assets/images/pijima21.jpg') },
-    { id: '6', title: 'Product 6', price: 399000, salePrice: 299000, image: require('../assets/images/pijima22.jpg') },
-];
-
-const ProductItem = ({ item }) => {
+const ProductItem = ({ item }:{ item:any }) => {
     const navigation = useNavigation();
 
     const handlePress = () => {
-        navigation.navigate('ProductDetail', { product: item });
+        navigation.navigate('ProductDetail', { productId: item.id });
     };
+
+    // Format giá về dạng VND và tính giá sale
+    const formatPrice = (price) => {
+        const vndPrice = Math.round(price * 23000); // Chuyển USD sang VND
+        // Tạo giá sale (giả lập) cho một số sản phẩm
+        const salePrice = item.id % 2 === 0 ? Math.round(vndPrice * 0.8) : null;
+        return { originalPrice: vndPrice, salePrice };
+    };
+
+    const prices = formatPrice(item.price);
 
     return (
         <TouchableOpacity style={styles.productItem} onPress={handlePress}>
-            <Image source={item.image} style={styles.productImage} />
-            <Text style={styles.productName}>{item.title}</Text>
+            <Image 
+                source={{ uri: item.image }} 
+                style={styles.productImage}
+                resizeMode="cover"
+            />
+            <Text style={styles.productName} numberOfLines={2}>{item.title}</Text>
             <View style={styles.priceContainer}>
-                {item.salePrice ? (
+                {prices.salePrice ? (
                     <>
-                        <Text style={styles.salePrice}>{item.salePrice}đ</Text>
-                        <Text style={styles.originalPrice}>{item.price}đ</Text>
+                        <Text style={styles.salePrice}>{prices.salePrice}đ</Text>
+                        <Text style={styles.originalPrice}>{prices.originalPrice}đ</Text>
                     </>
                 ) : (
-                    <Text style={styles.price}>{item.price}đ</Text>
+                    <Text style={styles.price}>{prices.originalPrice}đ</Text>
                 )}
             </View>
         </TouchableOpacity>
@@ -39,7 +44,25 @@ const ProductItem = ({ item }) => {
 
 const ProductList = () => {
     const [sortState, setSortState] = useState({ order: null, active: false });
-    const [products, setProducts] = useState(allProducts);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    useEffect(() => {
+        fetchProducts();
+    }, [selectedCategory]);
+
+    const fetchProducts = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('https://fakestoreapi.com/products');
+            const data = await response.json();
+            setProducts(data);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const sortProducts = () => {
         let newOrder;
@@ -53,17 +76,23 @@ const ProductList = () => {
 
         if (newOrder) {
             const sortedProducts = [...products].sort((a, b) => {
-                const priceA = a.salePrice || a.price;
-                const priceB = b.salePrice || b.price;
-                return newOrder === 'asc' ? priceA - priceB : priceB - priceA;
+                return newOrder === 'asc' ? a.price - b.price : b.price - a.price;
             });
             setProducts(sortedProducts);
         } else {
-            setProducts(allProducts);
+            fetchProducts();
         }
 
         setSortState({ order: newOrder, active: newOrder !== null });
     };
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -82,29 +111,35 @@ const ProductList = () => {
             <FlatList
                 data={products}
                 renderItem={({ item }) => <ProductItem item={item} />}
-                keyExtractor={item => item.id}
+                keyExtractor={item => item.id.toString()}
                 numColumns={2}
-                columnWrapperStyle={styles.row} />
+                columnWrapperStyle={styles.row}/>
             <ResponsiveMenu />
         </View>
-
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingHorizontal: 10,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     title: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
+        marginLeft: 10,
     },
-    
     sortContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10,
+        marginLeft: 10,
     },
     sortLabel: {
         marginRight: 10,
@@ -125,8 +160,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     row: {
-        flex: 1,
         justifyContent: 'space-between',
+        paddingHorizontal: 10,
     },
     productItem: {
         width: '48%',
@@ -140,6 +175,7 @@ const styles = StyleSheet.create({
     productName: {
         fontSize: 16,
         marginTop: 5,
+        height: 40, // Giới hạn chiều cao cho 2 dòng
     },
     priceContainer: {
         flexDirection: 'row',

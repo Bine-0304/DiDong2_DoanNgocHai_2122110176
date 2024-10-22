@@ -1,40 +1,50 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute } from '@react-navigation/native';
-import Header from './Header';
-import ResponsiveMenu from './ResponsiveMenu';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { useAppContext } from '../../contexts/AppContext';
+import Header from '../layout/Header';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import ResponsiveMenu from '../layout/ResponsiveMenu';
 
 const Checkout = () => {
     const route = useRoute();
-    
-    // Sử dụng dữ liệu từ params nếu có, nếu không sử dụng dữ liệu mẫu
+    const navigation = useNavigation();
+    const { clearCart } = useAppContext();
+
     const initialOrderItems = route.params?.cartItems || [
-        { id: '1', name: 'Product 1', qty: 2, size: 'M', price: 249000 },
-        { id: '2', name: 'Product 2', qty: 1, size: 'L', price: 599000 },
-        { id: '3', name: 'Product 3', qty: 1, size: 'S', price: 799000 },
     ];
 
     const [orderItems] = useState(initialOrderItems);
-    const [name, setName] = useState('');
-    const [address, setAddress] = useState('');
-    const [phone, setPhone] = useState('');
+    const [shippingInfo, setShippingInfo] = useState({
+        name: '',
+        address: '',
+        phone: '',
+    });
     const [paymentMethod, setPaymentMethod] = useState('cod');
 
-    const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    const handleCheckout = () => {
-        console.log('Đặt hàng với thông tin:', { name, address, phone, paymentMethod, totalAmount });
-        // Xử lý đặt hàng ở đây
+    const handleInputChange = (field, value) => {
+        setShippingInfo(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handlePlaceOrder = () => {
+        console.log('Order placed', { orderItems, shippingInfo, totalAmount, paymentMethod });
+        clearCart();
+        navigation.navigate('OrderConfirmation', { orderId: 'SOME-ORDER-ID' });
     };
 
     const renderOrderItem = ({ item }) => (
         <View style={styles.orderItem}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemDetails}>
-                Size: {item.size}, Số lượng: {item.qty}
-            </Text>
-            <Text style={styles.itemPrice}>{(item.price * item.qty).toLocaleString('vi-VN')} ₫</Text>
+            <Image source={{ uri: item.image }} style={styles.itemImage} />
+            <View style={styles.itemDetails}>
+                <Text style={styles.itemName}>{item.title}</Text>
+                <Text style={styles.itemInfo}>
+                    Số lượng: {item.quantity}
+                </Text>
+                <Text style={styles.itemPrice}>{(item.price * item.quantity).toLocaleString('vi-VN')} ₫</Text>
+            </View>
         </View>
     );
 
@@ -43,8 +53,13 @@ const Checkout = () => {
             <Header />
             <ScrollView style={styles.scrollView}>
                 <View style={styles.content}>
-                    <Text style={styles.title}>Thanh toán</Text>
-                    
+                    <View style={styles.titleContainer}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                            <Icon name="arrow-left" size={20} color="darkgray" />
+                        </TouchableOpacity>
+                        <Text style={styles.title}>Thanh toán</Text>
+                    </View>
+
                     <View style={styles.orderSummary}>
                         <Text style={styles.sectionTitle}>Tóm tắt đơn hàng</Text>
                         <FlatList
@@ -59,8 +74,8 @@ const Checkout = () => {
                         <Text style={styles.label}>Họ tên:</Text>
                         <TextInput
                             style={styles.input}
-                            value={name}
-                            onChangeText={setName}
+                            value={shippingInfo.name}
+                            onChangeText={(text) => handleInputChange('name', text)}
                             placeholder="Nhập họ tên"
                         />
                     </View>
@@ -69,8 +84,8 @@ const Checkout = () => {
                         <Text style={styles.label}>Địa chỉ:</Text>
                         <TextInput
                             style={styles.input}
-                            value={address}
-                            onChangeText={setAddress}
+                            value={shippingInfo.address}
+                            onChangeText={(text) => handleInputChange('address', text)}
                             placeholder="Nhập địa chỉ giao hàng"
                             multiline
                         />
@@ -80,8 +95,8 @@ const Checkout = () => {
                         <Text style={styles.label}>Số điện thoại:</Text>
                         <TextInput
                             style={styles.input}
-                            value={phone}
-                            onChangeText={setPhone}
+                            value={shippingInfo.phone}
+                            onChangeText={(text) => handleInputChange('phone', text)}
                             placeholder="Nhập số điện thoại"
                             keyboardType="phone-pad"
                         />
@@ -92,14 +107,12 @@ const Checkout = () => {
                         <View style={styles.paymentMethods}>
                             <TouchableOpacity
                                 style={[styles.paymentMethod, paymentMethod === 'cod' && styles.selectedPayment]}
-                                onPress={() => setPaymentMethod('cod')}
-                            >
+                                onPress={() => setPaymentMethod('cod')}>
                                 <Text style={[styles.paymentMethodText, paymentMethod === 'cod' && styles.selectedPaymentText]}>COD</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.paymentMethod, paymentMethod === 'bank' && styles.selectedPayment]}
-                                onPress={() => setPaymentMethod('bank')}
-                            >
+                                onPress={() => setPaymentMethod('bank')}>
                                 <Text style={[styles.paymentMethodText, paymentMethod === 'bank' && styles.selectedPaymentText]}>Chuyển khoản</Text>
                             </TouchableOpacity>
                         </View>
@@ -110,7 +123,7 @@ const Checkout = () => {
                         <Text style={styles.summaryAmount}>{totalAmount.toLocaleString('vi-VN')} ₫</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+                    <TouchableOpacity style={styles.checkoutButton} onPress={handlePlaceOrder}>
                         <Text style={styles.checkoutButtonText}>Đặt hàng</Text>
                     </TouchableOpacity>
                 </View>
@@ -120,7 +133,6 @@ const Checkout = () => {
             </View>
         </SafeAreaView>
     );
-
 };
 
 const styles = StyleSheet.create({
@@ -140,6 +152,19 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: 'center',
     },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 20,
+        position: 'relative',
+    },
+    backButton: {
+        position: 'absolute',
+        left: 0,
+        padding: 10,
+        top: -6,
+    },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -149,16 +174,26 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     orderItem: {
+        flexDirection: 'row',
         backgroundColor: '#fff',
         borderRadius: 8,
         padding: 10,
         marginBottom: 10,
     },
+    itemImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 4,
+        marginRight: 10,
+    },
+    itemDetails: {
+        flex: 1,
+    },
     itemName: {
         fontSize: 16,
         fontWeight: 'bold',
     },
-    itemDetails: {
+    itemInfo: {
         fontSize: 14,
         color: '#666',
     },
@@ -231,7 +266,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     menuWrapper: {
-        bottom: -33,
+        bottom: -40,
     },
 });
 

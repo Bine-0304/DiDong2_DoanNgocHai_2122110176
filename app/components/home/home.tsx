@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import ResponsiveMenu from '../ResponsiveMenu';
-import Banner from '../Banner';
-import Header from '../Header';
-import Categories from '../Category';
-import FeaturedProducts from '../featuredProduct';
-import NewProducts from '../newProduct';
-import Footer from '../Footer';
+import Banner from './Banner';
+import Header from '../layout/Header';
+import Categories from '../products/Category';
+import FeaturedProducts from './featuredProduct';
+import NewProducts from './newProduct';
+import Footer from '../layout/Footer';
+import ResponsiveMenu from '../layout/ResponsiveMenu';
 
 export default function Home() {
     return (
@@ -15,13 +15,13 @@ export default function Home() {
                 <Header />
                 <ScrollView contentContainerStyle={styles.scrollView}>
                     <Banner />
-                    <NewProducts/>
-                    <Categories/>
-                    <FeaturedProducts/>
+                    <NewProducts />
+                    <Categories />
+                    <FeaturedProducts />
                     <Footer />
                 </ScrollView>
             </View>
-            <ResponsiveMenu/>
+            <ResponsiveMenu />
         </SafeAreaView>
     );
 }
@@ -36,4 +36,5 @@ const styles = StyleSheet.create({
     scrollView: {
         flexGrow: 1,
     },
+
 });

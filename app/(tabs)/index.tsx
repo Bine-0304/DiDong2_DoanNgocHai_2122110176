@@ -2,23 +2,31 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import LoginScreen from '../LoginScreen';
-import RegisterScreen from '../RegisterScreen';
-import { AppProvider } from '../AppContext';
-import ProductDetail from '../ProductDetail';
-import ProductList from '../ProductList';
-import FavoritesScreen from '../FavoritesScreen';
-import ProfileScreen from '../ProfileScreen';
-import ResponsiveMenu from '../ResponsiveMenu';
-import Home from './home';
-import Checkout from '../Checkout';
+import Home from '../components/home/home';
+import ProductList from '../components/products/ProductList';
+import FavoritesScreen from '../screens/FavoritesScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import LoginScreen from '../screens/LoginScreen';
+import { AppProvider } from '../contexts/AppContext';
+import RegisterScreen from '../screens/RegisterScreen';
+import ProductDetail from '../components/products/ProductDetail';
+import ProductCategory from '../components/products/ProductCategory';
+import Checkout from '../components/cart/Checkout';
+import Cart from '../components/cart/Cart';
+import ResponsiveMenu from '../components/layout/ResponsiveMenu';
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
-  ProductDetail: undefined;
-  Checkout: undefined;
+  Home: undefined;
+  Products: undefined;
+  Favorites: undefined;
+  Profile: undefined;
+  ProductDetail: { id: string };
+  Checkout: { cartItems: CartItem[] };
+  ProductCategory: undefined;
+  Cart: undefined;
 };
 
 export type MainTabParamList = {
@@ -33,12 +41,12 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabs = () => {
   return (
-    <Tab.Navigator tabBar={props => <ResponsiveMenu {...props} />}>
-      <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Products" component={ProductList} />
-      <Tab.Screen name="Favorites" component={FavoritesScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
+      <Tab.Navigator tabBar={props => <ResponsiveMenu {...props} />}>
+        <Tab.Screen name="Home" component={Home} />
+        <Tab.Screen name="Products" component={ProductList} />
+        <Tab.Screen name="Favorites" component={FavoritesScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
+      </Tab.Navigator>
   );
 };
 
@@ -78,10 +86,21 @@ export default function App() {
           <Stack.Screen
             name="ProductDetail"
             component={ProductDetail} />
-            <Stack.Screen
+          <Stack.Screen
+            name="ProductCategory"
+            component={ProductCategory}
+            options={({ route }) => ({
+              title: route.params.category.charAt(0).toUpperCase() + route.params.category.slice(1),
+            })} />
+          <Stack.Screen
             name="Checkout"
             component={Checkout}
             options={{ headerShown: false }} />
+          <Stack.Screen
+            name="Cart"
+            component={Cart}
+            options={{ headerShown: false }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </AppProvider>

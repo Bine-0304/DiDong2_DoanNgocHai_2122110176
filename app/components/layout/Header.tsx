@@ -4,27 +4,42 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { DancingScript_400Regular, DancingScript_700Bold } from '@expo-google-fonts/dancing-script';
 import AppLoading from 'expo-app-loading';
+import { useAppContext } from '../../contexts/AppContext';
+import { useNavigation } from '@react-navigation/native';
+
 const Header: React.FC = () => {
   let [fontsLoaded] = useFonts({
     DancingScript_400Regular,
     DancingScript_700Bold,
   });
+  const { cartItems, isLoggedIn, user } = useAppContext();
+  const navigation = useNavigation();
+
+  const cartItemCount = cartItems ? new Set(cartItems.map(item => item.id)).size : 0;
+  
+  const handleCart = () => {
+    navigation.navigate('Cart', { cartItems: cartItems });
+  };
+
+  const handleLogin = () => {
+    navigation.navigate('Login');
+  };
 
   if (!fontsLoaded) {
     return <AppLoading />;
   }
+
   return (
     <View style={styles.container}>
       <Text style={styles.nameshop}>BijiHouse</Text>
       <View style={styles.topRow}>
         <Image
-          source={require('../assets/images/logo.png')}
+          source={require('../../../assets/images/logo.png')}
           style={styles.logo}/>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm kiếm..."
-          />
+            placeholder="Tìm kiếm..."/>
           <TouchableOpacity style={styles.searchButton}>
             <Ionicons name="search" size={20} color="black" />
           </TouchableOpacity>
@@ -32,29 +47,34 @@ const Header: React.FC = () => {
       </View>
       <View style={styles.bottomRow}>
         <View style={styles.authContainer}>
-          <TouchableOpacity>
-            <Text style={styles.authText}>ĐĂNG NHẬP</Text>
-          </TouchableOpacity>
+          {isLoggedIn ? (
+            <Text style={styles.welcomeText}>{user?.username}</Text>
+          ) : (
+            <TouchableOpacity onPress={handleLogin}>
+              <Text style={styles.authText}>ĐĂNG NHẬP</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.separator}>|</Text>
-          <TouchableOpacity>
-            <Text style={styles.authText}>Welcome to BijiHouse</Text>
-          </TouchableOpacity>
+          <Text style={styles.authText}>Welcome to BijiHouse</Text>
         </View>
         <View style={styles.iconContainer}>
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="chatbubble-outline" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cartButton}>
+          <TouchableOpacity style={styles.cartButton} onPress={handleCart}>
             <Ionicons name="cart-outline" size={24} color="black" />
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>0</Text>
-            </View>
+            {cartItemCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{cartItemCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -125,20 +145,28 @@ const styles = StyleSheet.create({
     padding: 5,
     borderRadius: 5,
   },
+
   badge: {
     position: 'absolute',
     right: -5,
     top: -5,
     backgroundColor: 'red',
     borderRadius: 10,
-    width: 20,
+    minWidth: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 5,
   },
   badgeText: {
     color: 'white',
     fontSize: 10,
+    fontWeight: 'bold',
+  },
+  welcomeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#4CAF50',
   },
 });
 

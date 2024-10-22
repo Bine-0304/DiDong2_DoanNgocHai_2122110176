@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ResponsiveMenu from './ResponsiveMenu';
+import ResponsiveMenu from '../components/layout/ResponsiveMenu';
 
 // Mock data for user profile
 const userProfile = {
   name: 'Nguyễn Văn A',
   email: 'nguyenvana@example.com',
-  avatar: require('../assets/images/logo.png'),
+  avatar: require('../../assets/images/logo.png'),
 };
 
 const ProfileScreen = () => {
@@ -40,9 +40,7 @@ const ProfileScreen = () => {
           <Text style={styles.logoutButtonText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
-      <View style={styles.menuWrapper}>
         <ResponsiveMenu />
-      </View>
     </SafeAreaView>
   );
 };
@@ -108,10 +106,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  menuWrapper: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
+  
 });
 
 export default ProfileScreen;
