@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAppContext } from '../../contexts/AppContext';
@@ -10,11 +10,9 @@ import ResponsiveMenu from '../layout/ResponsiveMenu';
 const Checkout = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { clearCart } = useAppContext();
+    const { removeMultipleFromCart } = useAppContext();
 
-    const initialOrderItems = route.params?.cartItems || [
-    ];
-
+    const initialOrderItems = route.params?.cartItems || [];
     const [orderItems] = useState(initialOrderItems);
     const [shippingInfo, setShippingInfo] = useState({
         name: '',
@@ -22,17 +20,50 @@ const Checkout = () => {
         phone: '',
     });
     const [paymentMethod, setPaymentMethod] = useState('cod');
-
     const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
     const handleInputChange = (field, value) => {
         setShippingInfo(prev => ({ ...prev, [field]: value }));
     };
 
+    const validateShippingInfo = () => {
+        const { name, address, phone } = shippingInfo;
+        
+        // Basic validation
+        if (!name.trim()) {
+            Alert.alert('Lỗi', 'Vui lòng nhập họ tên');
+            return false;
+        }
+        
+        if (!address.trim()) {
+            Alert.alert('Lỗi', 'Vui lòng nhập địa chỉ');
+            return false;
+        }
+        
+        // Basic phone number validation (can be more strict if needed)
+        const phoneRegex = /^[0-9]{10,11}$/;
+        if (!phone.trim() || !phoneRegex.test(phone)) {
+            Alert.alert('Lỗi', 'Vui lòng nhập số điện thoại hợp lệ (10-11 chữ số)');
+            return false;
+        }
+        
+        return true;
+    };
     const handlePlaceOrder = () => {
+        if (!validateShippingInfo()) {
+            return;
+        }
+         // Validate payment method (in this case, ensure it's COD)
+         if (paymentMethod !== 'cod') {
+            Alert.alert('Lỗi', 'Vui lòng chọn phương thức thanh toán COD');
+            return;
+        }
+        // Lấy danh sách ID của các món hàng đã thanh toán
+        const orderedItemIds = orderItems.map(item => item.id);
+        
+        // Xóa các món hàng đã thanh toán khỏi giỏ hàng
+        removeMultipleFromCart(orderedItemIds);
         console.log('Order placed', { orderItems, shippingInfo, totalAmount, paymentMethod });
-        clearCart();
-        navigation.navigate('OrderConfirmation', { orderId: 'SOME-ORDER-ID' });
+        navigation.navigate('OrderConfirmation', { orderId: 'SOME-ORDER-ID', returnToCart: true });
     };
 
     const renderOrderItem = ({ item }) => (
@@ -76,8 +107,7 @@ const Checkout = () => {
                             style={styles.input}
                             value={shippingInfo.name}
                             onChangeText={(text) => handleInputChange('name', text)}
-                            placeholder="Nhập họ tên"
-                        />
+                            placeholder="Nhập họ tên"/>
                     </View>
 
                     <View style={styles.formGroup}>
@@ -87,8 +117,7 @@ const Checkout = () => {
                             value={shippingInfo.address}
                             onChangeText={(text) => handleInputChange('address', text)}
                             placeholder="Nhập địa chỉ giao hàng"
-                            multiline
-                        />
+                            multiline />
                     </View>
 
                     <View style={styles.formGroup}>
@@ -98,8 +127,7 @@ const Checkout = () => {
                             value={shippingInfo.phone}
                             onChangeText={(text) => handleInputChange('phone', text)}
                             placeholder="Nhập số điện thoại"
-                            keyboardType="phone-pad"
-                        />
+                            keyboardType="phone-pad"/>
                     </View>
 
                     <View style={styles.formGroup}>
@@ -259,6 +287,8 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
+        opacity: 1, 
+
     },
     checkoutButtonText: {
         color: '#fff',
@@ -267,6 +297,10 @@ const styles = StyleSheet.create({
     },
     menuWrapper: {
         bottom: -40,
+    },    
+    checkoutButtonDisabled: {
+        backgroundColor: '#ccc',
+        opacity: 0.5,
     },
 });
 

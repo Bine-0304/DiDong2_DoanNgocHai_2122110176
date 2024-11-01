@@ -4,7 +4,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Home from '../components/home/home';
 import ProductList from '../components/products/ProductList';
-import FavoritesScreen from '../screens/FavoritesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import { AppProvider } from '../contexts/AppContext';
@@ -14,6 +13,8 @@ import ProductCategory from '../components/products/ProductCategory';
 import Checkout from '../components/cart/Checkout';
 import Cart from '../components/cart/Cart';
 import ResponsiveMenu from '../components/layout/ResponsiveMenu';
+import FavoritesScreen from '../screens/FavoritesScreen';
+import OrderConfirmation from '../components/cart/OrderConfirmation';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -25,8 +26,13 @@ export type RootStackParamList = {
   Profile: undefined;
   ProductDetail: { id: string };
   Checkout: { cartItems: CartItem[] };
+  OrderConfirmation: { 
+    orderId?: string; 
+    returnToCart?: boolean 
+  };
   ProductCategory: undefined;
   Cart: undefined;
+
 };
 
 export type MainTabParamList = {
@@ -41,12 +47,12 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const MainTabs = () => {
   return (
-      <Tab.Navigator tabBar={props => <ResponsiveMenu {...props} />}>
-        <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Products" component={ProductList} />
-        <Tab.Screen name="Favorites" component={FavoritesScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
-      </Tab.Navigator>
+    <Tab.Navigator tabBar={props => <ResponsiveMenu {...props} />}>
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Products" component={ProductList} />
+      <Tab.Screen name="Favorites" component={FavoritesScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
   );
 };
 
@@ -92,6 +98,10 @@ export default function App() {
             options={({ route }) => ({
               title: route.params.category.charAt(0).toUpperCase() + route.params.category.slice(1),
             })} />
+          <Stack.Screen
+            name="OrderConfirmation"
+            component={OrderConfirmation}
+            options={{ headerShown: false }} />
           <Stack.Screen
             name="Checkout"
             component={Checkout}

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import Header from '../layout/Header';
 import { useAppContext } from '../../contexts/AppContext';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import ResponsiveMenu from '../layout/ResponsiveMenu';
+import { useNavigation } from '@react-navigation/native';
 
 const Cart = () => {
     const { cartItems, updateCartItemQuantity, removeFromCart } = useAppContext();
     const navigation = useNavigation();
+
     const [selectedItems, setSelectedItems] = useState(cartItems.map(item => item.id));
     const toggleItemSelection = (itemId) => {
         if (selectedItems.includes(itemId)) {

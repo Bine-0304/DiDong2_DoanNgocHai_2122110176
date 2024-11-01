@@ -1,23 +1,94 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import ResponsiveMenu from '../components/layout/ResponsiveMenu';
-
-// Mock data for user profile
-const userProfile = {
-  name: 'Nguyễn Văn A',
-  email: 'nguyenvana@example.com',
-  avatar: require('../../assets/images/logo.png'),
-};
+import { useAppContext } from '../contexts/AppContext';
 
 const ProfileScreen = () => {
-  const renderMenuItem = (icon, title) => (
-    <TouchableOpacity style={styles.menuItem}>
+  const navigation = useNavigation();
+  const { setIsLoggedIn, setUser } = useAppContext();
+  const [userProfile, setUserProfile] = useState({
+    username: '',
+    email: '',
+    avatar: require('../../assets/images/logo.png'),
+  });
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const userDataString = await AsyncStorage.getItem('user');
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        setUserProfile(prevProfile => ({
+          ...prevProfile,
+          username: userData.username,
+          email: userData.email,
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có chắc chắn muốn đăng xuất?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel'
+        },
+        {
+          text: 'Đăng xuất',
+          onPress: async () => {
+            try {
+              // Giữ lại thông tin đăng nhập nếu người dùng đã chọn "Nhớ mật khẩu"
+              
+              // Xóa tất cả dữ liệu khác
+              await AsyncStorage.multiRemove([
+                'isLoggedIn',
+              ]);
+              const savedCredentials = await AsyncStorage.getItem('savedCredentials');
+              // Nếu có savedCredentials, lưu lại
+              if (!savedCredentials) {
+                // Chỉ xóa user data nếu không có savedCredentials
+                await AsyncStorage.removeItem('user');
+              }
+              // Cập nhật context
+              setUser(null);
+              setIsLoggedIn(false);
+              // Chuyển hướng về màn hình đăng nhập
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (error) {
+              console.error('Error during logout:', error);
+              Alert.alert('Lỗi', 'Đã xảy ra lỗi khi đăng xuất. Vui lòng thử lại.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const renderMenuItem = (icon, title, onPress) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <Ionicons name={icon} size={24} color="#333" />
       <Text style={styles.menuItemText}>{title}</Text>
-      <Ionicons name="chevron-forward" size={24} color="#ccc" />
+      <Ionicons name="chevron-forward" size={24} color="#999" />
     </TouchableOpacity>
   );
+
+  const handleMenuItemPress = (title) => {
+    Alert.alert('Thông báo', `Tính năng ${title} đang được phát triển`);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -25,22 +96,23 @@ const ProfileScreen = () => {
         <View style={styles.header}>
           <Image source={userProfile.avatar} style={styles.avatar} />
           <View style={styles.userInfo}>
-            <Text style={styles.name}>{userProfile.name}</Text>
+            <Text style={styles.name}>{userProfile.username}</Text>
             <Text style={styles.email}>{userProfile.email}</Text>
           </View>
         </View>
+
         <View style={styles.menuContainer}>
-          {renderMenuItem('person-outline', 'Thông tin cá nhân')}
-          {renderMenuItem('cart-outline', 'Đơn hàng của tôi')}
-          {renderMenuItem('heart-outline', 'Sản phẩm yêu thích')}
-          {renderMenuItem('settings-outline', 'Cài đặt')}
-          {renderMenuItem('help-circle-outline', 'Trợ giúp & Hỗ trợ')}
+          {renderMenuItem('person-outline', 'Thông tin cá nhân', () => handleMenuItemPress('Thông tin cá nhân'))}
+          {renderMenuItem('cart-outline', 'Đơn hàng của tôi', () => handleMenuItemPress('Đơn hàng của tôi'))}
+          {renderMenuItem('settings-outline', 'Cài đặt', () => handleMenuItemPress('Cài đặt'))}
+          {renderMenuItem('help-circle-outline', 'Trợ giúp & Hỗ trợ', () => handleMenuItemPress('Trợ giúp & Hỗ trợ'))}
         </View>
-        <TouchableOpacity style={styles.logoutButton}>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
-        <ResponsiveMenu />
+      <ResponsiveMenu/>
     </SafeAreaView>
   );
 };
@@ -106,7 +178,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  
 });
 
 export default ProfileScreen;

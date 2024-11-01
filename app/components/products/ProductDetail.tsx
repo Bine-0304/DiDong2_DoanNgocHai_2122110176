@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAppContext } from '../../contexts/AppContext';
-import { ShoppingCart } from 'lucide-react-native';
-import Header from '../layout/Header';
+import { Heart, ShoppingCart } from 'lucide-react-native';
 import ResponsiveMenu from '../layout/ResponsiveMenu';
+import { useAppContext } from '@/app/contexts/AppContext';
 const RelatedProductItem = ({ item, onPress }) => {
     const formatPrice = (price) => {
         const vndPrice = Math.round(price * 23000); // Chuyển USD sang VND
@@ -55,7 +54,7 @@ const ProductDetail = () => {
     const [loadingRelated, setLoadingRelated] = useState(true);
     const navigation = useNavigation();
     const [quantity, setQuantity] = useState(1);
-
+    const { addToFavorites, removeFromFavorites, isFavorite } = useAppContext();
     useEffect(() => {
         fetchProductDetail();
     }, [productId]);
@@ -90,6 +89,27 @@ const ProductDetail = () => {
             setLoadingRelated(false);
         }
     };
+    const handleToggleFavorite = () => {
+        if (product) {
+          const isCurrentlyFavorite = isFavorite(product.id);
+          
+          if (isCurrentlyFavorite) {
+            removeFromFavorites(product.id);
+            alert(`Đã xóa ${product.title} khỏi mục yêu thích`);
+          } else {
+            const favoriteProduct = {
+              id: product.id,
+              title: product.title,
+              price: prices.salePrice || prices.originalPrice,
+              image: product.image,
+              category: product.category
+            };
+            addToFavorites(favoriteProduct);
+            alert(`Đã thêm ${product.title} vào mục yêu thích`);
+          }
+        }
+      };
+    
 
     const formatPrice = (price) => {
         const vndPrice = Math.round(price * 23000);
@@ -163,6 +183,9 @@ const ProductDetail = () => {
                                     {prices.salePrice.toLocaleString('vi-VN')}đ
                                 </Text>
                             )}
+                            <TouchableOpacity>
+                                <Heart name="heart" onPress={() => handleToggleFavorite()} fill={isFavorite(product?.id) ? "#FF6347" : "none"}  size={22} color="#FF6347" style={styles.favoriteIcon} />
+                            </TouchableOpacity>
                         </View>
                         <Text style={styles.categoryText}>
                             Danh mục: {product.category}
@@ -371,6 +394,9 @@ const styles = StyleSheet.create({
     menuWrapper: {
         bottom: -40,
     },
+    favoriteIcon: {
+        marginLeft: 150,
+    }
 });
 
 export default ProductDetail;

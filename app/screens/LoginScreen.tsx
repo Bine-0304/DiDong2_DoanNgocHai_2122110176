@@ -37,17 +37,47 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
+  
   const handleLogin = async () => {
     try {
+      // Kiểm tra savedCredentials trước
+      const savedCredentials = await AsyncStorage.getItem('savedCredentials');
+      let userCredentials = null;
+
+      if (savedCredentials) {
+        userCredentials = JSON.parse(savedCredentials);
+      }
+
+      // Kiểm tra savedUser
       const savedUser = await AsyncStorage.getItem('user');
+      let user = null;
+
       if (savedUser) {
-        const user = JSON.parse(savedUser);
+        user = JSON.parse(savedUser);
+      } else if (userCredentials) {
+        // Nếu không có user nhưng có savedCredentials, tạo lại user
+        user = {
+          username: userCredentials.username,
+          password: userCredentials.password,
+          email: userCredentials.email || `${userCredentials.username}@example.com`
+        };
+        // Lưu lại user
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+      }
+
+      // Kiểm tra thông tin đăng nhập
+      if (user) {
         if ((user.username === username || user.email === username) && user.password === password) {
           if (rememberPassword) {
-            await AsyncStorage.setItem('savedCredentials', JSON.stringify({ username, password }));
+            await AsyncStorage.setItem('savedCredentials', JSON.stringify({
+              username,
+              password,
+              email: user.email
+            }));
           } else {
             await AsyncStorage.removeItem('savedCredentials');
           }
+
           await AsyncStorage.setItem('isLoggedIn', 'true');
           Alert.alert('Thành công', 'Đăng nhập thành công!', [
             { text: 'OK', onPress: () => navigation.navigate('Home') }
@@ -59,10 +89,10 @@ export default function LoginScreen({ navigation }: Props) {
         Alert.alert('Lỗi', 'Không tìm thấy tài khoản. Vui lòng đăng ký trước.');
       }
     } catch (error) {
+      console.error('Error during login:', error);
       Alert.alert('Lỗi', 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.');
     }
   };
-
   const handleForgotPassword = () => {
     Alert.alert('Thông báo', 'Chức năng quên mật khẩu sẽ được triển khai sau.');
   };
@@ -78,7 +108,7 @@ export default function LoginScreen({ navigation }: Props) {
             value={username}
             onChangeText={setUsername}
             placeholder="Tên đăng nhập hoặc email"
-            placeholderTextColor="#999"/>
+            placeholderTextColor="#999" />
         </View>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Mật khẩu:</Text>
@@ -88,11 +118,11 @@ export default function LoginScreen({ navigation }: Props) {
             onChangeText={setPassword}
             placeholder="Mật khẩu"
             placeholderTextColor="#999"
-            secureTextEntry/>
+            secureTextEntry />
         </View>
         <View style={styles.checkboxContainer}>
-          <TouchableOpacity 
-            style={styles.checkboxWrapper} 
+          <TouchableOpacity
+            style={styles.checkboxWrapper}
             onPress={() => setRememberPassword(!rememberPassword)}>
             <View style={[styles.checkbox, rememberPassword && styles.checkboxChecked]}>
               {rememberPassword && <Ionicons name="checkmark" size={16} color="white" />}
@@ -106,11 +136,14 @@ export default function LoginScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Đăng Nhập</Text>
         </TouchableOpacity>
-        <Text style={styles.siginText}>Chưa có tài khoản?
-          <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerButtonText}> Đăng Ký</Text>
-          </TouchableOpacity>
-        </Text>
+        <View style={styles.resterContainer}>
+          <Text style={styles.siginText}>Chưa có tài khoản?
+            <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.registerButtonText}> Đăng Ký</Text>
+            </TouchableOpacity>
+          </Text>
+        </View>
+
       </View>
     </LinearGradient>
   );
@@ -205,12 +238,16 @@ const styles = StyleSheet.create({
   registerButton: {
     marginTop: -2,
   },
-  siginText: {
+  resterContainer: {
+    flexDirection: 'row',
     marginTop: 15,
+    alignItems: 'center',
+  },
+  siginText: {
+    color: '#666',
   },
   registerButtonText: {
     color: '#4CAF50',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    fontWeight: 'bold',
   },
 });
